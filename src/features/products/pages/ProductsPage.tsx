@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { IoSearchOutline } from 'react-icons/io5';
+import { ProductCard } from '../components/ProductCard';
 import { getProducts } from '../services/productApi';
 import type { Product } from '../types';
 
@@ -6,6 +8,9 @@ export const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -15,7 +20,7 @@ export const ProductsPage = () => {
         setProducts(data.products);
       } catch (fetchError) {
         const message =
-          fetchError instanceof Error ? fetchError.message : 'Unable to load products.';
+         fetchError instanceof Error ? fetchError.message : 'Unable to load products.'; 
         setError(message);
       } finally {
         setIsLoading(false);
@@ -24,6 +29,16 @@ export const ProductsPage = () => {
 
     void loadProducts();
   }, []);
+
+  const categories = Array.from(new Set(products.map((product) => product.category)));
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory =
+      selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesStock = !inStockOnly || product.stock > 0;
+
+    return matchesSearch && matchesCategory && matchesStock;
+  });
 
   return (
     <section className="mx-auto w-full max-w-6xl py-8 sm:py-12">
@@ -46,45 +61,62 @@ export const ProductsPage = () => {
         </p>
       ) : null}
 
+      <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-3">
+        <div className="relative">
+          <IoSearchOutline
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+            aria-hidden="true"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search product name..."
+            className="h-10 w-full rounded-lg border border-zinc-300 pl-9 pr-3 text-sm outline-none ring-blue-500/40 placeholder:text-zinc-400 focus:ring-2"
+          />
+        </div>
+
+        <select
+          value={selectedCategory}
+          onChange={(event) => setSelectedCategory(event.target.value)}
+          className="h-10 rounded-lg border border-zinc-300 px-3 text-sm outline-none ring-blue-500/40 focus:ring-2"
+        >
+          <option value="all">All categories</option>
+          {categories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+
+        <label className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-700">
+          <input
+            type="checkbox"
+            checked={inStockOnly}
+            onChange={(event) => setInStockOnly(event.target.checked)}
+            className="h-4 w-4 accent-zinc-900"
+          />
+          In stock only
+        </label>
+      </div>
+
+      {!isLoading && !error ? (
+        <p className="mb-4 text-sm text-zinc-600">
+          Showing {filteredProducts.length} of {products.length} products
+        </p>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <article
-            key={product.id}
-            className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm"
-          >
-            <div className="bg-zinc-100 p-3">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="h-44 w-full rounded-lg object-cover opacity-100"
-                loading="lazy"
-              />
-            </div>
-
-            <div className="space-y-3 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                  {product.category}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  {product.rating.toFixed(1)} / 5
-                </span>
-              </div>
-
-              <h2 className="line-clamp-1 text-base font-semibold text-zinc-900 sm:text-lg">
-                {product.name}
-              </h2>
-
-              <div className="flex items-center justify-between">
-                <p className="text-lg font-bold text-zinc-900">
-                  ${product.price.toFixed(2)}
-                </p>
-                <p className="text-sm text-zinc-600">Stock: {product.stock}</p>
-              </div>
-            </div>
-          </article>
+        {filteredProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
+
+      {!isLoading && !error && filteredProducts.length === 0 ? (
+        <p className="mt-4 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-600">
+          No products match the selected filters.
+        </p>
+      ) : null}
     </section>
   );
 };

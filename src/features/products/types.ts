@@ -25,3 +25,4 @@ export type DummyJsonProduct = {
 export type DummyJsonResponse = {
   products: DummyJsonProduct[];
 };
+
