@@ -1,6 +1,7 @@
 export type Product = {
   id: number;
   name: string;
+  description: string;
   category: string;
   price: number;
   stock: number;
@@ -10,11 +11,15 @@ export type Product = {
 
 export type ProductsResponse = {
   products: Product[];
+  total: number;
+  skip: number;
+  limit: number;
 };
 
 export type DummyJsonProduct = {
   id: number;
   title: string;
+  description: string;
   category: string;
   price: number;
   stock: number;
@@ -24,5 +29,7 @@ export type DummyJsonProduct = {
 
 export type DummyJsonResponse = {
   products: DummyJsonProduct[];
+  total: number;
+  skip: number;
+  limit: number;
 };
-

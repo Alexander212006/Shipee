@@ -1,23 +1,36 @@
 import { useEffect, useState } from 'react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { ProductCard } from '../components/ProductCard';
+import { PRODUCTS_PER_PAGE } from '../constants/pagination';
 import { getProducts } from '../services/productApi';
 import type { Product } from '../types';
+import {
+  filterProducts,
+  getPageNumbers,
+  getProductCategories,
+  getProductsSkip,
+  getTotalPages,
+} from '../utils/products';
 
 export const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const loadProducts = async () => {
+      setIsLoading(true);
       try {
         setError('');
-        const data = await getProducts();
+        const skip = getProductsSkip(currentPage, PRODUCTS_PER_PAGE);
+        const data = await getProducts(PRODUCTS_PER_PAGE, skip);
         setProducts(data.products);
+        setTotalProducts(data.total);
       } catch (fetchError) {
         const message =
          fetchError instanceof Error ? fetchError.message : 'Unable to load products.'; 
@@ -28,17 +41,21 @@ export const ProductsPage = () => {
     };
 
     void loadProducts();
-  }, []);
+  }, [currentPage]);
 
-  const categories = Array.from(new Set(products.map((product) => product.category)));
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory =
-      selectedCategory === 'all' || product.category === selectedCategory;
-    const matchesStock = !inStockOnly || product.stock > 0;
+  const categories = getProductCategories(products);
+  const filteredProducts = filterProducts(products, search, selectedCategory, inStockOnly);
+  const totalPages = getTotalPages(totalProducts, PRODUCTS_PER_PAGE);
 
-    return matchesSearch && matchesCategory && matchesStock;
-  });
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory, inStockOnly]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <section className="mx-auto w-full max-w-6xl py-8 sm:py-12">
@@ -102,7 +119,7 @@ export const ProductsPage = () => {
 
       {!isLoading && !error ? (
         <p className="mb-4 text-sm text-zinc-600">
-          Showing {filteredProducts.length} of {products.length} products
+          Showing {filteredProducts.length} products on page {currentPage} of {totalPages}
         </p>
       ) : null}
 
@@ -116,6 +133,43 @@ export const ProductsPage = () => {
         <p className="mt-4 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-600">
           No products match the selected filters.
         </p>
+      ) : null}
+
+      {!isLoading && !error && filteredProducts.length > 0 ? (
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          {getPageNumbers(totalPages).map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => setCurrentPage(page)}
+              className={`rounded-lg px-3 py-2 text-sm ${
+                page === currentPage
+                  ? 'bg-zinc-900 text-white'
+                  : 'border border-zinc-300 text-zinc-700'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       ) : null}
     </section>
   );

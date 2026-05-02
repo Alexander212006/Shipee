@@ -1,4 +1,5 @@
-import type { Product } from "../types.ts";
+import { Link } from 'react-router-dom';
+import type { Product } from '../types';
 
 export const ProductCard = ({ product }: { product: Product }) => {
   return (
@@ -33,13 +34,21 @@ export const ProductCard = ({ product }: { product: Product }) => {
           <p className="text-sm text-zinc-600">Stock: {product.stock}</p>
         </div>
 
-        <button
-          type="button"
-          disabled={product.stock === 0}
-          className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
-        >
-          {product.stock === 0 ? "Out of stock" : "Add to cart"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={product.stock === 0}
+            className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+          >
+            {product.stock === 0 ? 'Out of stock' : 'Add to cart'}
+          </button>
+          <Link
+            to={`/products/${product.id}`}
+            className="whitespace-nowrap rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+          >
+            Details
+          </Link>
+        </div>
       </div>
     </article>
   );
