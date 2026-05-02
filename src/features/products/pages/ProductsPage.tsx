@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { CartItem } from "@/features/cart/types";
 import { loadCartItems, saveCartItems } from "@/features/cart/utils/storage";
+import { clearAuthorizedSession } from "@/features/auth/utils/session";
 import toast from "react-hot-toast";
 import { IoSearchOutline } from "react-icons/io5";
 import { IoCartOutline } from "react-icons/io5";
@@ -18,6 +19,7 @@ import {
 } from "../utils/products";
 
 export const ProductsPage = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>(() => loadCartItems());
   const [totalProducts, setTotalProducts] = useState(0);
@@ -89,6 +91,11 @@ export const ProductsPage = () => {
     saveCartItems(cartItems);
   }, [cartItems]);
 
+  const handleLogout = () => {
+    clearAuthorizedSession();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <section className="mx-auto w-full max-w-6xl py-8 sm:py-12">
       <header className="mb-6 flex items-start justify-between gap-4 sm:mb-8">
@@ -101,18 +108,27 @@ export const ProductsPage = () => {
           </p>
         </div>
 
-        <Link
-          to="/cart/summary"
-          className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 text-zinc-700 transition hover:bg-zinc-100"
-          aria-label="Go to cart summary"
-        >
-          <IoCartOutline className="h-6 w-6" aria-hidden="true" />
-          {totalCartItems > 0 ? (
-            <span className="absolute -right-1 -top-1 rounded-full bg-zinc-900 px-1.5 py-0.5 text-xs font-semibold text-white">
-              {totalCartItems}
-            </span>
-          ) : null}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/cart/summary"
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 text-zinc-700 transition hover:bg-zinc-100"
+            aria-label="Go to cart summary"
+          >
+            <IoCartOutline className="h-6 w-6" aria-hidden="true" />
+            {totalCartItems > 0 ? (
+              <span className="absolute -right-1 -top-1 rounded-full bg-zinc-900 px-1.5 py-0.5 text-xs font-semibold text-white">
+                {totalCartItems}
+              </span>
+            ) : null}
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       {isLoading ? (

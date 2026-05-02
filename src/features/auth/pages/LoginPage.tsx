@@ -10,6 +10,7 @@ import {
 import { userCredentials } from '../data/userCredentials';
 import { initialLoginFormState } from '../constants/loginFormState';
 import { loginFormReducer } from '../utils/loginFormState';
+import { setAuthorizedSession } from '../utils/session';
 
 export const LoginForm = () => {
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +55,7 @@ export const LoginForm = () => {
       return;
     }
 
+    setAuthorizedSession();
     navigate('/products');
   };
 

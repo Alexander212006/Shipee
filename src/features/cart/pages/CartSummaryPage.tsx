@@ -93,12 +93,12 @@ export const CartSummaryPage = () => {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="mt-5 w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
+          <Link
+            to="/checkout"
+            className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
           >
             Proceed to Checkout
-          </button>
+          </Link>
 
           <Link
             to="/products"
