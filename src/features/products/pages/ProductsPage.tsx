@@ -1,24 +1,30 @@
-import { useEffect, useState } from 'react';
-import { IoSearchOutline } from 'react-icons/io5';
-import { ProductCard } from '../components/ProductCard';
-import { PRODUCTS_PER_PAGE } from '../constants/pagination';
-import { getProducts } from '../services/productApi';
-import type { Product } from '../types';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import type { CartItem } from "@/features/cart/types";
+import { loadCartItems, saveCartItems } from "@/features/cart/utils/storage";
+import toast from "react-hot-toast";
+import { IoSearchOutline } from "react-icons/io5";
+import { IoCartOutline } from "react-icons/io5";
+import { ProductCard } from "../components/ProductCard";
+import { PRODUCTS_PER_PAGE } from "../constants/pagination";
+import { getProducts } from "../services/productApi";
+import type { Product } from "../types";
 import {
   filterProducts,
   getPageNumbers,
   getProductCategories,
   getProductsSkip,
   getTotalPages,
-} from '../utils/products';
+} from "../utils/products";
 
 export const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => loadCartItems());
   const [totalProducts, setTotalProducts] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -26,14 +32,16 @@ export const ProductsPage = () => {
     const loadProducts = async () => {
       setIsLoading(true);
       try {
-        setError('');
+        setError("");
         const skip = getProductsSkip(currentPage, PRODUCTS_PER_PAGE);
         const data = await getProducts(PRODUCTS_PER_PAGE, skip);
         setProducts(data.products);
         setTotalProducts(data.total);
       } catch (fetchError) {
         const message =
-         fetchError instanceof Error ? fetchError.message : 'Unable to load products.'; 
+          fetchError instanceof Error
+            ? fetchError.message
+            : "Unable to load products.";
         setError(message);
       } finally {
         setIsLoading(false);
@@ -44,32 +52,73 @@ export const ProductsPage = () => {
   }, [currentPage]);
 
   const categories = getProductCategories(products);
-  const filteredProducts = filterProducts(products, search, selectedCategory, inStockOnly);
+  const filteredProducts = filterProducts(
+    products,
+    search,
+    selectedCategory,
+    inStockOnly,
+  );
   const totalPages = getTotalPages(totalProducts, PRODUCTS_PER_PAGE);
+  const totalCartItems = cartItems.length;
+
+  const handleAddToCart = (product: Product) => {
+    setCartItems((prevCartItems) => {
+      const existingItem = prevCartItems.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        return prevCartItems.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+        );
+      }
+
+      return [
+        ...prevCartItems,
+        {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+        },
+      ];
+    });
+
+    toast.success(`${product.name} added to cart`);
+  };
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [search, selectedCategory, inStockOnly]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+    saveCartItems(cartItems);
+  }, [cartItems]);
 
   return (
     <section className="mx-auto w-full max-w-6xl py-8 sm:py-12">
-      <header className="mb-6 sm:mb-8">
-        <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">
-          Product List
-        </h1>
-        <p className="mt-2 text-sm text-zinc-600 sm:text-base">
-          Browse available products in your catalog.
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-4 sm:mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">
+            Product List
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600 sm:text-base">
+            Browse available products in your catalog.
+          </p>
+        </div>
+
+        <Link
+          to="/cart/summary"
+          className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 text-zinc-700 transition hover:bg-zinc-100"
+          aria-label="Go to cart summary"
+        >
+          <IoCartOutline className="h-6 w-6" aria-hidden="true" />
+          {totalCartItems > 0 ? (
+            <span className="absolute -right-1 -top-1 rounded-full bg-zinc-900 px-1.5 py-0.5 text-xs font-semibold text-white">
+              {totalCartItems}
+            </span>
+          ) : null}
+        </Link>
       </header>
 
       {isLoading ? (
-        <p className="text-sm text-zinc-600 sm:text-base">Loading products...</p>
+        <p className="text-sm text-zinc-600 sm:text-base">
+          Loading products...
+        </p>
       ) : null}
 
       {error ? (
@@ -119,13 +168,18 @@ export const ProductsPage = () => {
 
       {!isLoading && !error ? (
         <p className="mb-4 text-sm text-zinc-600">
-          Showing {filteredProducts.length} products on page {currentPage} of {totalPages}
+          Showing {filteredProducts.length} products on page {currentPage} of{" "}
+          {totalPages}
         </p>
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            onAddToCart={handleAddToCart}
+          />
         ))}
       </div>
 
@@ -153,8 +207,8 @@ export const ProductsPage = () => {
               onClick={() => setCurrentPage(page)}
               className={`rounded-lg px-3 py-2 text-sm ${
                 page === currentPage
-                  ? 'bg-zinc-900 text-white'
-                  : 'border border-zinc-300 text-zinc-700'
+                  ? "bg-zinc-900 text-white"
+                  : "border border-zinc-300 text-zinc-700"
               }`}
             >
               {page}
@@ -163,7 +217,9 @@ export const ProductsPage = () => {
 
           <button
             type="button"
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
             className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
           >

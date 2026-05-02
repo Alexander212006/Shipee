@@ -33,3 +33,8 @@ export type DummyJsonResponse = {
   skip: number;
   limit: number;
 };
+
+export type ProductCardProps = {
+  product: Product;
+  onAddToCart: (product: Product) => void;
+};

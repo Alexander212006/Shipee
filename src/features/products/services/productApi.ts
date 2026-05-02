@@ -15,7 +15,7 @@ const mapProduct = (product: DummyJsonProduct): Product => {
   };
 };
 
-export const getProducts = async (limit = 9, skip = 0): Promise<ProductsResponse> => {
+export const getProducts = async (limit = 20, skip = 0): Promise<ProductsResponse> => {
   const response = await fetch(`${PRODUCTS_API_URL}?limit=${limit}&skip=${skip}`);
 
   if (!response.ok) {

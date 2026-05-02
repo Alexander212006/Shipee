@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import type { Product } from '../types';
+import type { ProductCardProps } from '../types';
 
-export const ProductCard = ({ product }: { product: Product }) => {
+
+export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
     <article className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
       <div className="bg-zinc-100 p-3">
@@ -38,6 +39,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
           <button
             type="button"
             disabled={product.stock === 0}
+            onClick={() => onAddToCart(product)}
             className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
           >
             {product.stock === 0 ? 'Out of stock' : 'Add to cart'}
