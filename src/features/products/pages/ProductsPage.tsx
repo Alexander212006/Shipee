@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Modal } from "antd";
 import type { CartItem } from "@/features/cart/types";
 import { loadCartItems, saveCartItems } from "@/features/cart/utils/storage";
 import { clearAuthorizedSession } from "@/features/auth/utils/session";
@@ -92,8 +93,17 @@ export const ProductsPage = () => {
   }, [cartItems]);
 
   const handleLogout = () => {
-    clearAuthorizedSession();
-    navigate("/login", { replace: true });
+    Modal.confirm({
+      title: "Log out?",
+      content: "Are you sure you want to log out?",
+      okText: "Log out",
+      cancelText: "Cancel",
+      okType: "danger",
+      onOk: () => {
+        clearAuthorizedSession();
+        navigate("/login", { replace: true });
+      },
+    });
   };
 
   return (
