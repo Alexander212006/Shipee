@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import App from './App';
+import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { LoginForm } from '@/features/auth/pages/LoginPage';
 import { SignUpForm } from '@/features/auth/pages/SignUpPage';
 import { CheckoutPage } from '@/features/checkout/pages/CheckoutPage';
@@ -13,8 +14,9 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <RouteErrorBoundary />,
     children: [
-      { index: true, element: <Navigate to="/login" replace/> },
+      { index: true, element: <Navigate to="/login" replace /> },
       {
         path: 'login',
         element: (
